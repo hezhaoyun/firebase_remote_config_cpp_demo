@@ -17,9 +17,9 @@ endif()
 project(firebase_testapp)
 
 # Sample source files.
-set(FIREBASE_SAMPLE_COMMON_SRCS
+set(FIREBASE_SAMPLE_SRCS
   src/main.h
-  src/common_main.cc
+  src/main.cc
 )
 
 # The include directory for the testapp.
@@ -35,15 +35,9 @@ set (CMAKE_CXX_STANDARD 11)
 # https://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx
 set(MSVC_RUNTIME_MODE MD)
 
-# Platform abstraction layer for the desktop sample.
-set(FIREBASE_SAMPLE_DESKTOP_SRCS
-  src/desktop_main.cc
-)
-
-set(target_name "desktop_testapp")
+set(target_name "testapp")
 add_executable(${target_name}
-  ${FIREBASE_SAMPLE_DESKTOP_SRCS}
-  ${FIREBASE_SAMPLE_COMMON_SRCS}
+  ${FIREBASE_SAMPLE_SRCS}
 )
 
 set(ADDITIONAL_LIBS advapi32 ws2_32 crypt32 rpcrt4 ole32)
@@ -62,7 +56,7 @@ foreach(config "google-services-desktop.json" "google-services.json")
   endif()
 endforeach()
 if(NOT FOUND_JSON_FILE)
-  message(WARNING "Failed to find either google-services-desktop.json or google-services.json. See the readme.md for more information.")
+  message(WARNING "Failed to find either google-services-desktop.json or google-services.json.")
 endif()
 
 # Add the Firebase libraries to the target using the function from the SDK.
