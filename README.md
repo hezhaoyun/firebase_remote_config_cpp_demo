@@ -17,7 +17,7 @@ Clone the current project and put the `google-services.json` file obtained in St
 
 ### Step 3
 
-Configure `cmake` on Windows.
+If `cmake` is not installed on your computer, install it from https://cmake.org/install/.
 
 
 
