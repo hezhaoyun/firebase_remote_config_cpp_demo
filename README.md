@@ -35,7 +35,7 @@ Switch to the project directory under `cmd` and run `cmake --build .`
 
 ### Step 6
 
-Run `<project directory>/<Debug>/testapp.exe`
+Run `<project directory>/Debug/testapp.exe`
 
 
 
