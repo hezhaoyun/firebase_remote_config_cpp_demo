@@ -9,3 +9,11 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+firebase_testapp.sln
+ALL_BUILD.*
+ZERO_CHECK.*
+desktop_testapp.*
+desktop_testapp.dir/
+Debug/
+x64/

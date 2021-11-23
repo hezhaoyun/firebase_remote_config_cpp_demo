@@ -45,7 +45,8 @@ extern "C" int common_main(int argc, const char *argv[])
 
     while (initializer.InitializeLastResult().status() != firebase::kFutureStatusComplete)
     {
-        if (ProcessEvents(100)) return 1; // exit if requested
+        if (ProcessEvents(100))
+            return 1; // exit if requested
     }
 
     if (initializer.InitializeLastResult().error() != 0)
@@ -66,8 +67,7 @@ extern "C" int common_main(int argc, const char *argv[])
     static const ::firebase::remote_config::ConfigKeyValueVariant defaults[] = {
         {"menu_show_extendshrink", "True"},
         {"language_support", ""},
-        {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults, sizeof(kBinaryDefaults))}
-    };
+        {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults, sizeof(kBinaryDefaults))}};
 
     size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
     remote_config->SetDefaults(defaults, default_count);
@@ -76,22 +76,30 @@ extern "C" int common_main(int argc, const char *argv[])
     // completed for the app that set them.
 
     ::firebase::remote_config::ValueInfo value_info;
-    
-    bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
-    LogMessage("Get menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
 
-    std::string result = remote_config->GetString("language_support", &value_info);
-    LogMessage("Get language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
-
-    std::vector<unsigned char> result = remote_config->GetData("TestData");
-    for (size_t i = 0; i < result.size(); ++i)
     {
-        const unsigned char value = result[i];
-        LogMessage("TestData[%d] = 0x%02x", i, value);
+        bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
+        LogMessage("Get menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
     }
 
-    std::string result = remote_config->GetString("TestNotSet", &value_info);
-    LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+    {
+        std::string result = remote_config->GetString("language_support", &value_info);
+        LogMessage("Get language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+    }
+
+    {
+        std::vector<unsigned char> result = remote_config->GetData("TestData");
+        for (size_t i = 0; i < result.size(); ++i)
+        {
+            const unsigned char value = result[i];
+            LogMessage("TestData[%d] = 0x%02x", i, value);
+        }
+    }
+
+    {
+        std::string result = remote_config->GetString("TestNotSet", &value_info);
+        LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+    }
 
     // Test the existence of the keys by name.
     // Print out the keys with default values.
@@ -109,14 +117,15 @@ extern "C" int common_main(int argc, const char *argv[])
     {
         LogMessage("  %s", s->c_str());
     }
-    
+
     // Test Fetch...
 
     LogMessage("Fetch...");
     auto future_result = remote_config->Fetch(0);
     while (future_result.status() == firebase::kFutureStatusPending)
     {
-        if (ProcessEvents(1000)) break;
+        if (ProcessEvents(1000))
+            break;
     }
 
     if (future_result.status() == firebase::kFutureStatusComplete)
@@ -132,28 +141,34 @@ extern "C" int common_main(int argc, const char *argv[])
             static_cast<int>(info.fetch_time),
             1970.0f + static_cast<float>(info.fetch_time) / (1000.0f * 60.0f * 60.0f * 24.0f * 365.0f),
             info.last_fetch_status, info.last_fetch_failure_reason,
-            info.throttled_end_time
-        );
+            info.throttled_end_time);
 
         // Print out the new values, which may be updated from the Fetch.
-        
-        bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
-        LogMessage("Updated menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
-    
-        std::string result = remote_config->GetString("language_support", &value_info);
-        LogMessage("Updated language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
-    
-        std::vector<unsigned char> result = remote_config->GetData("TestData");
-        for (size_t i = 0; i < result.size(); ++i)
+
         {
-            const unsigned char value = result[i];
-            LogMessage("TestData[%d] = 0x%02x", i, value);
+            bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
+            LogMessage("Updated menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
         }
-    
-        std::string result = remote_config->GetString("TestNotSet", &value_info);
-        LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
-    
-    
+
+        {
+            std::string result = remote_config->GetString("language_support", &value_info);
+            LogMessage("Updated language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        }
+
+        {
+            std::vector<unsigned char> result = remote_config->GetData("TestData");
+            for (size_t i = 0; i < result.size(); ++i)
+            {
+                const unsigned char value = result[i];
+                LogMessage("TestData[%d] = 0x%02x", i, value);
+            }
+        }
+
+        {
+            std::string result = remote_config->GetString("TestNotSet", &value_info);
+            LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        }
+
         // Print out the keys that are now tied to data
 
         std::vector<std::string> keys = remote_config->GetKeys();
@@ -181,7 +196,9 @@ extern "C" int common_main(int argc, const char *argv[])
     future_result.Release();
 
     // Wait until the user wants to quit the app.
-    while (!ProcessEvents(1000)) { }
+    while (!ProcessEvents(1000))
+    {
+    }
 
     // remote_config->Terminate();
     delete app;
