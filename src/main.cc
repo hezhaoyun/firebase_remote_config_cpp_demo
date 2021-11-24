@@ -2,11 +2,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <direct.h>
-#define chdir _chdir
-
-#include <windows.h>
-
 #include <algorithm>
 #include <string>
 
@@ -14,6 +9,7 @@
 #include "firebase/remote_config.h"
 #include "firebase/util.h"
 
+#include "windows_helper.h"
 #include "main.h" // NOLINT
 
 // The TO_STRING macro is useful for command line defined strings as the quotes
@@ -30,281 +26,212 @@
 
 static bool quit = false;
 
-static BOOL WINAPI SignalHandler(DWORD event)
-{
-  if (!(event == CTRL_C_EVENT || event == CTRL_BREAK_EVENT))
-    return FALSE;
-
-  quit = true;
-
-  return TRUE;
-}
-
-bool ProcessEvents(int msec)
-{
-  Sleep(msec);
-  return quit;
-}
-
-std::string PathForResource()
-{
-  return std::string();
-}
-
-void LogMessage(const char *format, ...)
-{
-  va_list list;
-
-  va_start(list, format);
-  vprintf(format, list);
-
-  va_end(list);
-  printf("\n");
-
-  fflush(stdout);
-}
-
-WindowContext GetWindowContext() { return nullptr; }
-
-// Change the current working directory to the directory containing the
-// specified file.
-void ChangeToFileDirectory(const char *file_path)
-{
-  std::string path(file_path);
-  std::replace(path.begin(), path.end(), '\\', '/');
-
-  auto slash = path.rfind('/');
-
-  if (slash != std::string::npos)
-  {
-    std::string directory = path.substr(0, slash);
-    if (!directory.empty())
-      chdir(directory.c_str());
-  }
-}
-
 // Convert remote_config::ValueSource to a string.
 
 const char *ValueSourceToString(firebase::remote_config::ValueSource source)
 {
-  static const char *kSourceToString[] = {
-      "Static",  // kValueSourceStaticValue
-      "Remote",  // kValueSourceRemoteValue
-      "Default", // kValueSourceDefaultValue
-  };
+    static const char *kSourceToString[] = {
+        "Static",  // kValueSourceStaticValue
+        "Remote",  // kValueSourceRemoteValue
+        "Default", // kValueSourceDefaultValue
+    };
 
-  return kSourceToString[source];
-}
-
-std::string Unicode2ASCII(const std::string& from)
-{
-    std::string to;
-
-    int len = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, nullptr, 0);
-    std::vector<wchar_t> buffer(len, 0);
-    MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, buffer.data(), len);
-
-    len = WideCharToMultiByte(CP_ACP, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
-    std::vector<char> temp(len, 0);
-    WideCharToMultiByte(CP_ACP, 0, buffer.data(), -1, temp.data(), len, nullptr, nullptr);
-
-    to = temp.data();
-    return to;
+    return kSourceToString[source];
 }
 
 ::firebase::InitResult init_fn(::firebase::App *app, void *)
 {
-  LogMessage("Try to initialize Remote Config");
-  ::firebase::remote_config::RemoteConfig::GetInstance(app);
+    LogMessage("Try to initialize Remote Config");
+    ::firebase::remote_config::RemoteConfig::GetInstance(app);
 
-  return ::firebase::InitResult::kInitResultSuccess;
+    return ::firebase::InitResult::kInitResultSuccess;
 }
 
 // Execute all methods of the C++ Remote Config API.
 
 int main_proc(int argc, const char *argv[])
 {
-  ::firebase::App *app;
+    ::firebase::App *app;
 
-  // Initialization
+    // Initialization
 
-  LogMessage("Initialize the Firebase Remote Config library");
-  app = ::firebase::App::Create();
+    LogMessage("Initialize the Firebase Remote Config library");
+    app = ::firebase::App::Create();
 
-  LogMessage("Created the Firebase app %x", static_cast<int>(reinterpret_cast<intptr_t>(app)));
+    LogMessage("Created the Firebase app %x", static_cast<int>(reinterpret_cast<intptr_t>(app)));
 
-  ::firebase::ModuleInitializer initializer;
-  initializer.Initialize(app, nullptr, init_fn);
+    ::firebase::ModuleInitializer initializer;
+    initializer.Initialize(app, nullptr, init_fn);
 
-  while (initializer.InitializeLastResult().status() != firebase::kFutureStatusComplete)
-  {
-    if (ProcessEvents(100))
-      return 1; // exit if requested
-  }
-
-  if (initializer.InitializeLastResult().error() != 0)
-  {
-    LogMessage("Failed to initialize Firebase Remote Config: %s", initializer.InitializeLastResult().error_message());
-    ProcessEvents(2000);
-    return 1;
-  }
-
-  LogMessage("Initialized the Firebase Remote Config API");
-
-  ::firebase::remote_config::RemoteConfig *remote_config = ::firebase::remote_config::RemoteConfig::GetInstance(app);
-
-  // Initialization Complete
-  // Set Defaults, and test them
-
-  static const unsigned char kBinaryDefaults[] = {6, 7, 3};
-  static const ::firebase::remote_config::ConfigKeyValueVariant defaults[] = {
-      {"menu_show_extendshrink", "True"},
-      {"language_support", ""},
-      {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults, sizeof(kBinaryDefaults))}};
-
-  size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
-  remote_config->SetDefaults(defaults, default_count);
-
-  // The return values may not be the set defaults, if a fetch was previously
-  // completed for the app that set them.
-
-  ::firebase::remote_config::ValueInfo value_info;
-
-  {
-    bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
-    LogMessage("Get menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
-  }
-
-  {
-    std::string result = remote_config->GetString("language_support", &value_info);
-    result = Unicode2ASCII(result);
-    LogMessage("Get language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
-  }
-
-  {
-    std::vector<unsigned char> result = remote_config->GetData("TestData");
-    for (size_t i = 0; i < result.size(); ++i)
+    while (initializer.InitializeLastResult().status() != firebase::kFutureStatusComplete)
     {
-      const unsigned char value = result[i];
-      LogMessage("TestData[%d] = 0x%02x", i, value);
+        if (ProcessEvents(100))
+            return 1; // exit if requested
     }
-  }
 
-  {
-    std::string result = remote_config->GetString("TestNotSet", &value_info);
-    LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
-  }
+    if (initializer.InitializeLastResult().error() != 0)
+    {
+        LogMessage("Failed to initialize Firebase Remote Config: %s", initializer.InitializeLastResult().error_message());
+        ProcessEvents(2000);
+        return 1;
+    }
 
-  // Test the existence of the keys by name.
-  // Print out the keys with default values.
+    LogMessage("Initialized the Firebase Remote Config API");
 
-  std::vector<std::string> keys = remote_config->GetKeys();
-  LogMessage("GetKeys:");
-  for (auto s = keys.begin(); s != keys.end(); ++s)
-  {
-    LogMessage("  %s", s->c_str());
-  }
+    ::firebase::remote_config::RemoteConfig *remote_config = ::firebase::remote_config::RemoteConfig::GetInstance(app);
 
-  keys = remote_config->GetKeysByPrefix("TestD");
-  LogMessage("GetKeysByPrefix(\"TestD\"):");
-  for (auto s = keys.begin(); s != keys.end(); ++s)
-  {
-    LogMessage("  %s", s->c_str());
-  }
+    // Initialization Complete
+    // Set Defaults, and test them
 
-  // Test Fetch...
+    static const unsigned char kBinaryDefaults[] = {6, 7, 3};
+    static const ::firebase::remote_config::ConfigKeyValueVariant defaults[] = {
+        {"menu_show_extendshrink", "True"},
+        {"language_support", ""},
+        {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults, sizeof(kBinaryDefaults))}};
 
-  LogMessage("Fetch...");
-  auto future_result = remote_config->Fetch(0);
-  while (future_result.status() == firebase::kFutureStatusPending)
-  {
-    if (ProcessEvents(1000))
-      break;
-  }
+    size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
+    remote_config->SetDefaults(defaults, default_count);
 
-  if (future_result.status() == firebase::kFutureStatusComplete)
-  {
-    LogMessage("Fetch Complete");
-    bool activate_result = remote_config->Activate().result();
-    LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
+    // The return values may not be the set defaults, if a fetch was previously
+    // completed for the app that set them.
 
-    const ::firebase::remote_config::ConfigInfo &info = remote_config->GetInfo();
-    LogMessage(
-        "Info last_fetch_time_ms=%d (year=%.2f) fetch_status=%d "
-        "failure_reason=%d throttled_end_time=%d",
-        static_cast<int>(info.fetch_time),
-        1970.0f + static_cast<float>(info.fetch_time) / (1000.0f * 60.0f * 60.0f * 24.0f * 365.0f),
-        info.last_fetch_status, info.last_fetch_failure_reason,
-        info.throttled_end_time);
-
-    // Print out the new values, which may be updated from the Fetch.
+    ::firebase::remote_config::ValueInfo value_info;
 
     {
-      bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
-      LogMessage("Updated menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
+        bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
+        LogMessage("Get menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
     }
 
     {
-      std::string result = remote_config->GetString("language_support", &value_info);
-      result = Unicode2ASCII(result);
-      LogMessage("Updated language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        std::string result = remote_config->GetString("language_support", &value_info);
+        result = Unicode2ASCII(result);
+        LogMessage("Get language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
     }
 
     {
-      std::vector<unsigned char> result = remote_config->GetData("TestData");
-      for (size_t i = 0; i < result.size(); ++i)
-      {
-        const unsigned char value = result[i];
-        LogMessage("TestData[%d] = 0x%02x", i, value);
-      }
+        std::vector<unsigned char> result = remote_config->GetData("TestData");
+        for (size_t i = 0; i < result.size(); ++i)
+        {
+            const unsigned char value = result[i];
+            LogMessage("TestData[%d] = 0x%02x", i, value);
+        }
     }
 
     {
-      std::string result = remote_config->GetString("TestNotSet", &value_info);
-      LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        std::string result = remote_config->GetString("TestNotSet", &value_info);
+        LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
     }
 
-    // Print out the keys that are now tied to data
+    // Test the existence of the keys by name.
+    // Print out the keys with default values.
 
     std::vector<std::string> keys = remote_config->GetKeys();
     LogMessage("GetKeys:");
     for (auto s = keys.begin(); s != keys.end(); ++s)
     {
-      LogMessage("  %s", s->c_str());
+        LogMessage("  %s", s->c_str());
     }
 
     keys = remote_config->GetKeysByPrefix("TestD");
     LogMessage("GetKeysByPrefix(\"TestD\"):");
     for (auto s = keys.begin(); s != keys.end(); ++s)
     {
-      LogMessage("  %s", s->c_str());
+        LogMessage("  %s", s->c_str());
     }
-  }
-  else
-  {
-    LogMessage("Fetch Incomplete");
-  }
 
-  // Release a handle to the future so we can shutdown the Remote Config API
-  // when exiting the app.
+    // Test Fetch...
 
-  future_result.Release();
+    LogMessage("Fetch...");
+    auto future_result = remote_config->Fetch(0);
+    while (future_result.status() == firebase::kFutureStatusPending)
+    {
+        if (ProcessEvents(1000))
+            break;
+    }
 
-  // Wait until the user wants to quit the app.
-  while (!ProcessEvents(1000))
-  {
-  }
+    if (future_result.status() == firebase::kFutureStatusComplete)
+    {
+        LogMessage("Fetch Complete");
+        bool activate_result = remote_config->Activate().result();
+        LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
 
-  // remote_config->Terminate();
-  delete app;
+        const ::firebase::remote_config::ConfigInfo &info = remote_config->GetInfo();
+        LogMessage(
+            "Info last_fetch_time_ms=%d (year=%.2f) fetch_status=%d "
+            "failure_reason=%d throttled_end_time=%d",
+            static_cast<int>(info.fetch_time),
+            1970.0f + static_cast<float>(info.fetch_time) / (1000.0f * 60.0f * 60.0f * 24.0f * 365.0f),
+            info.last_fetch_status, info.last_fetch_failure_reason,
+            info.throttled_end_time);
 
-  return 0;
+        // Print out the new values, which may be updated from the Fetch.
+
+        {
+            bool result = remote_config->GetBoolean("menu_show_extendshrink", &value_info);
+            LogMessage("Updated menu_show_extendshrink %d %s", result ? 1 : 0, ValueSourceToString(value_info.source));
+        }
+
+        {
+            std::string result = remote_config->GetString("language_support", &value_info);
+            result = Unicode2ASCII(result);
+            LogMessage("Updated language_support \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        }
+
+        {
+            std::vector<unsigned char> result = remote_config->GetData("TestData");
+            for (size_t i = 0; i < result.size(); ++i)
+            {
+                const unsigned char value = result[i];
+                LogMessage("TestData[%d] = 0x%02x", i, value);
+            }
+        }
+
+        {
+            std::string result = remote_config->GetString("TestNotSet", &value_info);
+            LogMessage("Get TestNotSet \"%s\" %s", result.c_str(), ValueSourceToString(value_info.source));
+        }
+
+        // Print out the keys that are now tied to data
+
+        std::vector<std::string> keys = remote_config->GetKeys();
+        LogMessage("GetKeys:");
+        for (auto s = keys.begin(); s != keys.end(); ++s)
+        {
+            LogMessage("  %s", s->c_str());
+        }
+
+        keys = remote_config->GetKeysByPrefix("TestD");
+        LogMessage("GetKeysByPrefix(\"TestD\"):");
+        for (auto s = keys.begin(); s != keys.end(); ++s)
+        {
+            LogMessage("  %s", s->c_str());
+        }
+    }
+    else
+    {
+        LogMessage("Fetch Incomplete");
+    }
+
+    // Release a handle to the future so we can shutdown the Remote Config API
+    // when exiting the app.
+
+    future_result.Release();
+
+    // Wait until the user wants to quit the app.
+    while (!ProcessEvents(1000))
+    {
+    }
+
+    remote_config->DeleteInternal();
+    delete app;
+
+    return 0;
 }
 
 int main(int argc, const char *argv[])
 {
-  ChangeToFileDirectory(FIREBASE_CONFIG_STRING[0] != '\0' ? FIREBASE_CONFIG_STRING : argv[0]); // NOLINT
-  SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
+    ChangeToFileDirectory(FIREBASE_CONFIG_STRING[0] != '\0' ? FIREBASE_CONFIG_STRING : argv[0]); // NOLINT
+    SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
 
-  return main_proc(argc, argv);
+    return main_proc(argc, argv);
 }
