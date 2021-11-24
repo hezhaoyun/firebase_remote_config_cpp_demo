@@ -17,3 +17,5 @@ testapp.*
 testapp.dir/
 Debug/
 x64/
+.vs/
+build/
