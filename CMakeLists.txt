@@ -18,6 +18,9 @@ project(firebase_testapp)
 
 # Sample source files.
 set(FIREBASE_SAMPLE_SRCS
+  src/windows_helper.h
+  src/config_helper.h
+  src/config_helper.cc
   src/main.h
   src/main.cc
 )
