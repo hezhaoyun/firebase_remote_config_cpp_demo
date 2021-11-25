@@ -26,7 +26,7 @@ Clone the current project and put the `google-services.json` file obtained in St
 
 If `cmake` is not installed on your computer, install it from https://cmake.org/install/,
 
-then config FIREBASE_SDK_DIR in `CMakeLists.txt`.
+then config `FIREBASE_CPP_SDK_DIR` in `CMakeLists.txt`.
 
 
 ### Step 4
