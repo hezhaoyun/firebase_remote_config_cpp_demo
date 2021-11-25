@@ -4,7 +4,9 @@
 ### Step 0
 
 Download firebase cpp sdk from here:
+
 https://firebase.google.com/download/cpp?authuser=0
+
 
 ### Step 1
 
@@ -28,7 +30,7 @@ If `cmake` is not installed on your computer, install it from https://cmake.org/
 
 ### Step 4
 
-Switch to the project directory under `cmd` and run `cmake .`
+Switch to the project directory under `cmd` and run `cmake .`, then config FIREBASE_SDK_DIR in `CMakefile.txt`.
 
 
 
