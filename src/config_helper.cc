@@ -124,7 +124,7 @@ std::string getString(const std::string &key, std::string defVal, RemoteConfig *
 {
     auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
-    if (matchKey.size() > 0)
+    if (matchKey != "")
     {
         return rc->GetString(matchKey.c_str());
     }
@@ -136,7 +136,7 @@ long getLong(const std::string &key, long defVal, RemoteConfig *rc, const Config
 {
     auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
-    if (matchKey.size() > 0)
+    if (matchKey != "")
     {
         return rc->GetLong(matchKey.c_str());
     }
@@ -148,7 +148,7 @@ double getDouble(const std::string &key, double defVal, RemoteConfig *rc, const 
 {
     auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
-    if (matchKey.size() > 0)
+    if (matchKey != "")
     {
         return rc->GetDouble(matchKey.c_str());
     }
@@ -160,7 +160,7 @@ bool getBool(const std::string &key, bool defVal, RemoteConfig *rc, const Config
 {
     auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
-    if (matchKey.size() > 0)
+    if (matchKey != "")
     {
         return rc->GetBoolean(matchKey.c_str());
     }
