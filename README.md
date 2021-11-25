@@ -1,6 +1,10 @@
 # Use Firebase Remote Config on Windows
 
 
+### Step 0
+
+Download firebase cpp sdk.
+
 ### Step 1
 
 Create a Firebase project and add an Android application.
