@@ -1,6 +1,13 @@
 # Use Firebase Remote Config on Windows
 
 
+### Step 0
+
+Download firebase cpp sdk from here:
+
+https://firebase.google.com/download/cpp?authuser=0
+
+
 ### Step 1
 
 Create a Firebase project and add an Android application.
@@ -17,8 +24,9 @@ Clone the current project and put the `google-services.json` file obtained in St
 
 ### Step 3
 
-If `cmake` is not installed on your computer, install it from https://cmake.org/install/.
+If `cmake` is not installed on your computer, install it from https://cmake.org/install/,
 
+then config FIREBASE_SDK_DIR in `CMakeLists.txt`.
 
 
 ### Step 4
