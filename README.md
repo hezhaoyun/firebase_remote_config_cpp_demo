@@ -3,7 +3,8 @@
 
 ### Step 0
 
-Download firebase cpp sdk.
+Download firebase cpp sdk from here:
+https://firebase.google.com/download/cpp?authuser=0
 
 ### Step 1
 
