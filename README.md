@@ -18,7 +18,7 @@ Download the SDK configuration file `google-services.json`.
 
 ### Step 3
 
-Clone the current project and put the `google-services.json` file obtained in Step 1 into the project root directory.
+Clone the current project and put the `google-services.json` file obtained in Step 2 into the project root directory.
 
 
 
