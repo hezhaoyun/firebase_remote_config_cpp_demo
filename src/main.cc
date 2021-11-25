@@ -9,8 +9,8 @@
 #include "firebase/remote_config.h"
 #include "firebase/util.h"
 
-#include "windows_helper.h"
 #include "main.h" // NOLINT
+#include "config_helper.h"
 
 // The TO_STRING macro is useful for command line defined strings as the quotes
 // get stripped.
@@ -24,7 +24,80 @@
 #define FIREBASE_CONFIG_STRING ""
 #endif // FIREBASE_CONFIG
 
+#include <direct.h>
+#include <windows.h>
+#define chdir _chdir
+
 static bool quit = false;
+
+static BOOL WINAPI SignalHandler(DWORD event)
+{
+    if (!(event == CTRL_C_EVENT || event == CTRL_BREAK_EVENT))
+        return FALSE;
+
+    quit = true;
+
+    return TRUE;
+}
+
+bool ProcessEvents(int msec)
+{
+    Sleep(msec);
+    return quit;
+}
+
+std::string PathForResource()
+{
+    return std::string();
+}
+
+void LogMessage(const char *format, ...)
+{
+    va_list list;
+
+    va_start(list, format);
+    vprintf(format, list);
+
+    va_end(list);
+    printf("\n");
+
+    fflush(stdout);
+}
+
+WindowContext GetWindowContext() { return nullptr; }
+
+// Change the current working directory to the directory containing the
+// specified file.
+void ChangeToFileDirectory(const char *file_path)
+{
+    std::string path(file_path);
+    std::replace(path.begin(), path.end(), '\\', '/');
+
+    auto slash = path.rfind('/');
+
+    if (slash != std::string::npos)
+    {
+        std::string directory = path.substr(0, slash);
+        if (!directory.empty())
+            chdir(directory.c_str());
+    }
+}
+
+std::string Unicode2ASCII(const std::string &from)
+{
+    std::string to;
+
+    int len = MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, nullptr, 0);
+    std::vector<wchar_t> buffer(len, 0);
+    MultiByteToWideChar(CP_UTF8, 0, from.c_str(), -1, buffer.data(), len);
+
+    len = WideCharToMultiByte(CP_ACP, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
+    std::vector<char> temp(len, 0);
+    WideCharToMultiByte(CP_ACP, 0, buffer.data(), -1, temp.data(), len, nullptr, nullptr);
+
+    to = temp.data();
+    return to;
+}
 
 // Convert remote_config::ValueSource to a string.
 
@@ -212,6 +285,16 @@ int main_proc(int argc, const char *argv[])
         LogMessage("Fetch Incomplete");
     }
 
+    // config filtrate test
+    auto v = getString("rate", "-", remote_config, &ConfigEnv("", "Free", "English"));
+    LogMessage("#### free+english: rate: %s", v.c_str());
+
+    v = getString("rate", "-", remote_config, &ConfigEnv("", "Trial", "German"));
+    LogMessage("#### trial+german: rate: %s", v.c_str());
+
+    v = getString("rate", "-", remote_config, &ConfigEnv("xagon", "Free", "French"));
+    LogMessage("#### xagon+free+french: rate: %s", v.c_str());
+
     // Release a handle to the future so we can shutdown the Remote Config API
     // when exiting the app.
 
@@ -222,7 +305,7 @@ int main_proc(int argc, const char *argv[])
     {
     }
 
-    remote_config->DeleteInternal();
+    // remote_config->Terminal();
     delete app;
 
     return 0;

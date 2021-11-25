@@ -4,10 +4,11 @@
 #include <algorithm>
 
 #include "config_helper.h"
+#define FieldSpliter "__"
 
-std::string toLower(const std::string &originStr)
+std::string toLower(const std::string &origin)
 {
-    std::string str = originStr;
+    std::string str = origin;
 
     std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
                    { return std::tolower(c); });
@@ -15,11 +16,11 @@ std::string toLower(const std::string &originStr)
     return str;
 }
 
-bool inArray(const std::string &str, const char *array[])
+bool inArray(const std::string &str, const std::vector<std::string> &array)
 {
-    for (int i = 0; i < sizeof(array) / sizeof(array[0]); i++)
+    for (int i = 0; i < array.size(); i++)
     {
-        if (toLower(str) == array[i])
+        if (toLower(str) == toLower(array[i]))
         {
             return true;
         }
@@ -28,66 +29,89 @@ bool inArray(const std::string &str, const char *array[])
     return false;
 }
 
-std::vector<std::string> split(const std::string &str, const char splitChar)
+std::vector<std::string> split(const std::string &originStr, const std::string &spliter)
 {
-    std::istringstream stream(str);
-
-    std::string token;
+    std::string str = originStr;
     std::vector<std::string> tokens;
 
-    while (getline(stream, token, splitChar))
+    char *token = strtok((char *)str.c_str(), spliter.c_str());
+
+    while (token != NULL)
     {
         tokens.push_back(token);
+        token = strtok(NULL, spliter.c_str());
     }
 
     return tokens;
 }
 
-std::string SelectKey(const std::vector<std::string> &keys, const char *key,
-                      const char *channel, const char *version, const char *language)
+std::string selectKey(const std::vector<std::string> originKeys, const std::string &key, const ConfigEnv *env)
 {
+    // Sort keys by condition field amount
+
+    std::vector<std::string> keys = originKeys;
+
+    std::sort(keys.begin(), keys.end(), [](const std::string &a, const std::string &b)
+              { return split(a, FieldSpliter).size() > split(b, FieldSpliter).size(); });
+
     for (auto itKey = keys.begin(); itKey != keys.end(); itKey++)
     {
-        auto tokens = split(*itKey, '.');
+        auto tokens = split(*itKey, FieldSpliter);
 
-        // key 的主体部分被包含在找到的 key 中，但不相同
+        // key's first token must as same as search
 
-        if (toLower(*itKey) != key)
+        if (toLower(tokens[0]) != toLower(key))
             return "";
 
-        // 仅有 key 主体部分
+        // has key body alone
 
         if (tokens.size() == 1)
-            return *itKey;
+            return key;
 
         auto itToken = tokens.begin();
+
         itToken++;
+        auto matchBreak = false;
 
         for (; itToken != tokens.end(); itToken++)
         {
-            // 通道不匹配
+            // channel is not matched.
 
             if (inArray(*itToken, channel::all))
             {
-                if (toLower(*itToken) != channel)
-                    continue;
+                if (toLower(*itToken) != toLower(env->channel))
+                {
+                    matchBreak = true;
+                    break;
+                }
             }
 
-            // 版本不匹配
+            // version is not matched.
 
             if (inArray(*itToken, version::all))
             {
-                if (toLower(*itToken) != version)
-                    continue;
+                if (toLower(*itToken) != toLower(env->version))
+                {
+                    matchBreak = true;
+                    break;
+                }
             }
 
-            // 语言不匹配
+            // lanuguage is not matched.
 
             if (inArray(*itToken, language::all))
             {
-                if (toLower(*itToken) != language)
-                    continue;
+                if (toLower(*itToken) != toLower(env->language))
+                {
+                    matchBreak = true;
+                    break;
+                }
             }
+        }
+
+        if (matchBreak)
+        {
+            continue;
         }
 
         return *itKey;
@@ -96,54 +120,50 @@ std::string SelectKey(const std::vector<std::string> &keys, const char *key,
     return "";
 }
 
-std::string GetString(const char *key, std::string defaultValue,
-                      RemoteConfig *remote_config, char *channel, char *version, char *language)
+std::string getString(const std::string &key, std::string defVal, RemoteConfig *rc, const ConfigEnv *env)
 {
-    auto matchKey = SelectKey(remote_config->GetKeysByPrefix(key), key, channel, version, language);
+    auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
     if (matchKey.size() > 0)
     {
-        return remote_config->GetString(matchKey.c_str());
+        return rc->GetString(matchKey.c_str());
     }
 
-    return defaultValue;
+    return defVal;
 }
 
-long GetLong(const char *key, long defaultValue,
-             RemoteConfig *remote_config, char *channel, char *version, char *language)
+long getLong(const std::string &key, long defVal, RemoteConfig *rc, const ConfigEnv *env)
 {
-    auto matchKey = SelectKey(remote_config->GetKeysByPrefix(key), key, channel, version, language);
+    auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
     if (matchKey.size() > 0)
     {
-        return remote_config->GetLong(matchKey.c_str());
+        return rc->GetLong(matchKey.c_str());
     }
 
-    return defaultValue;
+    return defVal;
 }
 
-double GetDouble(const char *key, double defaultValue,
-                 RemoteConfig *remote_config, char *channel, char *version, char *language)
+double getDouble(const std::string &key, double defVal, RemoteConfig *rc, const ConfigEnv *env)
 {
-    auto matchKey = SelectKey(remote_config->GetKeysByPrefix(key), key, channel, version, language);
+    auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
     if (matchKey.size() > 0)
     {
-        return remote_config->GetDouble(matchKey.c_str());
+        return rc->GetDouble(matchKey.c_str());
     }
 
-    return defaultValue;
+    return defVal;
 }
 
-bool GetBool(const char *key, bool defaultValue,
-             RemoteConfig *remote_config, char *channel, char *version, char *language)
+bool getBool(const std::string &key, bool defVal, RemoteConfig *rc, const ConfigEnv *env)
 {
-    auto matchKey = SelectKey(remote_config->GetKeysByPrefix(key), key, channel, version, language);
+    auto matchKey = selectKey(rc->GetKeysByPrefix(key.c_str()), key, env);
 
     if (matchKey.size() > 0)
     {
-        return remote_config->GetBoolean(matchKey.c_str());
+        return rc->GetBoolean(matchKey.c_str());
     }
 
-    return defaultValue;
+    return defVal;
 }

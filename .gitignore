@@ -18,4 +18,5 @@ testapp.dir/
 Debug/
 x64/
 .vs/
+.vscode/
 build/

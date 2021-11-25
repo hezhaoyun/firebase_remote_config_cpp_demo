@@ -9,14 +9,14 @@ typedef ::firebase::remote_config::RemoteConfig RemoteConfig;
 
 namespace channel
 {
-    const char *kChannelEdm = "Edm";
-    const char *kChannelXagon = "Xagon";
-    const char *kChannelEfrontier = "Efrontier";
-    const char *kChannelAd = "Ad";
-    const char *kChannelAdX = "Ad_X";
-    const char *kChannelAdContent = "Ad_Content";
+    const std::string kChannelEdm = "Edm";
+    const std::string kChannelXagon = "Xagon";
+    const std::string kChannelEfrontier = "Efrontier";
+    const std::string kChannelAd = "Ad";
+    const std::string kChannelAdX = "Ad_X";
+    const std::string kChannelAdContent = "Ad_Content";
 
-    const char *all[] = {
+    const std::vector<std::string> all{
         kChannelEdm,
         kChannelXagon,
         kChannelEfrontier,
@@ -28,10 +28,10 @@ namespace channel
 
 namespace version
 {
-    const char *kVersionFree = "Free";
-    const char *kVersionTrial = "Trial";
+    const std::string kVersionFree = "Free";
+    const std::string kVersionTrial = "Trial";
 
-    const char *all[] = {
+    const std::vector<std::string> all{
         kVersionFree,
         kVersionTrial,
     };
@@ -39,23 +39,23 @@ namespace version
 
 namespace language
 {
-    const char *kLanguageEnglish = "English";
-    const char *kLanguageChineseTrad = "ChineseTrad";
-    const char *kLanguageDanish = "Danish";
-    const char *kLanguageArabic = "Arabic";
-    const char *kLanguageDutch = "Dutch";
-    const char *kLanguageThai = "Thai";
-    const char *kLanguageMalaysian = "Malaysian";
-    const char *kLanguageFrench = "French";
-    const char *kLanguageGerman = "German";
-    const char *kLanguageItalian = "Italian";
-    const char *kLanguageJapanese = "Japanese";
-    const char *kLanguageKorean = "Korean";
-    const char *kLanguagePolish = "Polish";
-    const char *kLanguagePortuguese = "Portuguese";
-    const char *kLanguageSpanish = "Spanish";
+    const std::string kLanguageEnglish = "English";
+    const std::string kLanguageChineseTrad = "ChineseTrad";
+    const std::string kLanguageDanish = "Danish";
+    const std::string kLanguageArabic = "Arabic";
+    const std::string kLanguageDutch = "Dutch";
+    const std::string kLanguageThai = "Thai";
+    const std::string kLanguageMalaysian = "Malaysian";
+    const std::string kLanguageFrench = "French";
+    const std::string kLanguageGerman = "German";
+    const std::string kLanguageItalian = "Italian";
+    const std::string kLanguageJapanese = "Japanese";
+    const std::string kLanguageKorean = "Korean";
+    const std::string kLanguagePolish = "Polish";
+    const std::string kLanguagePortuguese = "Portuguese";
+    const std::string kLanguageSpanish = "Spanish";
 
-    const char *all[] = {
+    const std::vector<std::string> all{
         kLanguageEnglish,
         kLanguageChineseTrad,
         kLanguageDanish,
@@ -74,16 +74,22 @@ namespace language
     };
 }
 
-std::string GetString(const char *key, std::string defaultValue,
-                      RemoteConfig *remote_config, char *channel, char *version, char *language);
+struct ConfigEnv
+{
+    std::string channel;
+    std::string version;
+    std::string language;
 
-long GetLong(const char *key, long defaultValue,
-             RemoteConfig *remote_config, char *channel, char *version, char *language);
+    const ConfigEnv(const std::string &c, const std::string &v, const std::string &l)
+        : channel(c), version(v), language(l) {}
+};
 
-double GetDouble(const char *key, double defaultValue,
-                 RemoteConfig *remote_config, char *channel, char *version, char *language);
+std::string getString(const std::string &key, const std::string defVal, RemoteConfig *rc, const ConfigEnv *env);
 
-bool GetBool(const char *key, bool defaultValue,
-             RemoteConfig *remote_config, char *channel, char *version, char *language);
+long getLong(const std::string &key, long defVal, RemoteConfig *rc, const ConfigEnv *env);
+
+double getDouble(const std::string &key, double defVal, RemoteConfig *rc, const ConfigEnv *env);
+
+bool getBool(const std::string &key, bool defVal, RemoteConfig *rc, const ConfigEnv *env);
 
 #endif // _CONFIG_HELPER_H_
