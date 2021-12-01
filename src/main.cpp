@@ -163,7 +163,7 @@ int main(int argc, const char *argv[])
         printf("rate (Frial + German): %s\n", v.c_str());
 
         v = getString("rate", "-", remote_config, &ConfigEnv("xagon", "Free", "French"));
-        printf("rate (Fagon + Free + French): %s\n\n\n", v.c_str());
+        printf("rate (Xagon + Free + French): %s\n\n\n", v.c_str());
     }
     else
     {
