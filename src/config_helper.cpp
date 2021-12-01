@@ -109,10 +109,14 @@ std::string selectKey(const std::vector<std::string> originKeys, const std::stri
             }
         }
 
+        // There is an unsatisfied condition
+
         if (matchBreak)
         {
             continue;
         }
+
+        // All conditions matched
 
         return *itKey;
     }
