@@ -13,11 +13,10 @@
 
 #include <direct.h>
 #include <windows.h>
-#define chdir _chdir
 
 static bool quit = false;
 
-std::string Unicode2ASCII(const std::string &from)
+std::string unicode2Ascii(const std::string &from)
 {
     std::string to;
 
@@ -35,7 +34,7 @@ std::string Unicode2ASCII(const std::string &from)
 
 // Convert remote_config::ValueSource to a string.
 
-const char *ValueSourceToString(firebase::remote_config::ValueSource source)
+const char *valueSourceToString(firebase::remote_config::ValueSource source)
 {
     static const char *kSourceToString[] = {
         "Static",  // kValueSourceStaticValue
@@ -142,17 +141,17 @@ int main(int argc, const char *argv[])
 
         // Print out the new values, which may be updated from the Fetch.
 
-        auto v = Unicode2ASCII(remote_config->GetString("json_iap", &value_info));
-        printf("json_iap: %s %s\n", v.c_str(), ValueSourceToString(value_info.source));
+        auto v = unicode2Ascii(remote_config->GetString("json_iap", &value_info));
+        printf("json_iap: %s %s\n", v.c_str(), valueSourceToString(value_info.source));
         
         v = remote_config->GetString("url_homepage", &value_info);
-        printf("url_homepage: \"%s\" %s\n", v.c_str(), ValueSourceToString(value_info.source));
+        printf("url_homepage: \"%s\" %s\n", v.c_str(), valueSourceToString(value_info.source));
         
         v = remote_config->GetString("url_upgrade_check", &value_info);
-        printf("url_upgrade_check: \"%s\" %s\n", v.c_str(), ValueSourceToString(value_info.source));
+        printf("url_upgrade_check: \"%s\" %s\n", v.c_str(), valueSourceToString(value_info.source));
         
         v = remote_config->GetString("url_privacy_policy", &value_info);
-        printf("url_privacy_policy: \"%s\" %s\n\n", v.c_str(), ValueSourceToString(value_info.source));
+        printf("url_privacy_policy: \"%s\" %s\n\n", v.c_str(), valueSourceToString(value_info.source));
 
         // Complex param test: manage channel, version, languge by self
 

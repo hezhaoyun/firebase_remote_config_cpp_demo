@@ -68,7 +68,11 @@ std::string selectKey(const std::vector<std::string> originKeys, const std::stri
         if (tokens.size() == 1)
             return key;
 
+        // The key has more confitions
+
         auto itToken = tokens.begin();
+
+        // first token is same as search key, skip it.
 
         itToken++;
         auto matchBreak = false;
@@ -120,6 +124,8 @@ std::string selectKey(const std::vector<std::string> originKeys, const std::stri
 
         return *itKey;
     }
+
+    // There is no qualified remote key
 
     return "";
 }
