@@ -80,8 +80,8 @@ struct ConfigEnv
     std::string version;
     std::string language;
 
-    const ConfigEnv(const std::string &c, const std::string &v, const std::string &l)
-        : channel(c), version(v), language(l) {}
+    const ConfigEnv(const std::string &_channel, const std::string &_version, const std::string &_language)
+        : channel(_channel), version(_version), language(_language) {}
 };
 
 std::string getString(const std::string &key, const std::string defVal, RemoteConfig *rc, const ConfigEnv *env);

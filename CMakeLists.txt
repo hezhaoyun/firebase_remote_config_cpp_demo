@@ -21,9 +21,8 @@ project(firebase_testapp)
 # Sample source files.
 set(FIREBASE_SAMPLE_SRCS
   src/config_helper.h
-  src/config_helper.cc
-  src/main.h
-  src/main.cc
+  src/config_helper.cpp
+  src/main.cpp
 )
 
 # The include directory for the testapp.
