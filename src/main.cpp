@@ -17,22 +17,6 @@
 
 static bool quit = false;
 
-static BOOL SignalHandler(DWORD event)
-{
-    if (!(event == CTRL_C_EVENT || event == CTRL_BREAK_EVENT))
-        return FALSE;
-
-    quit = true;
-
-    return TRUE;
-}
-
-bool ProcessEvents(int msec)
-{
-    Sleep(msec);
-    return quit;
-}
-
 std::string Unicode2ASCII(const std::string &from)
 {
     std::string to;
@@ -85,14 +69,13 @@ int main(int argc, const char *argv[])
 
     while (initializer.InitializeLastResult().status() != firebase::kFutureStatusComplete)
     {
-        if (ProcessEvents(100))
-            return 1; // exit if requested
+        Sleep(100);
     }
 
     if (initializer.InitializeLastResult().error() != 0)
     {
         printf("Failed to initialize Firebase Remote Config: %s", initializer.InitializeLastResult().error_message());
-        ProcessEvents(2000);
+        Sleep(2000);
         return 1;
     }
 
@@ -122,8 +105,7 @@ int main(int argc, const char *argv[])
     auto future_result = remote_config->Fetch(0);
     while (future_result.status() == firebase::kFutureStatusPending)
     {
-        if (ProcessEvents(1000))
-            break;
+        Sleep(1000);
     }
 
     if (future_result.status() == firebase::kFutureStatusComplete)
